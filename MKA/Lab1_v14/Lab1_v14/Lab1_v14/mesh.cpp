@@ -12,22 +12,48 @@ void MESH::input() {
 void MESH::calculateTheCoordinatesOfTheVertexes() {
 	int id = 1;
 	Point A;
-	double yStep = (R - r) / m; 
-	double nAngle = 90 / n;
+	double sum = 0,ySum=0.;
+	if (kn < 1 && ns == false || kn >= 1 && ns == true)  kn = 1. / kn;
+	if (km < 1 && ms == false || km >= 1 && ms == true)  km = 1. / km;
+	
+	for (int i = 0; i < n; i++) sum += pow(kn, i);
+	for (int i = 0; i < m; i++) ySum += pow(km, i);
+	double yStep = (R - r) / ySum; 
+	double cR = r;
+
 	for (int j = 0; j <= m; j++) {
-		double cR = r + j * yStep;
-		for (int i = 0; i <= n; i++,id++) {
-			
-			double aop = i * nAngle* M_PI/ 180.0;
-			double sn = sin(aop);
-			double cs = cos(aop);
 
-			A.id = id;
-			A.x = cs * cR;
-			A.y = sn * cR;
+		
+		double nAngle = 0.;
+		double cAngle = 0;
+		for (int i = 0; i <= n; i++,id++) 
+{
+			if (i == n) {
+				A.id = id;
+				A.x = 0;
+				A.y = cR;
+			}
+			else {
+				if (i == 1) { 
+					cAngle = 90 / sum;
+					nAngle += cAngle;
+				}
+				double aop = nAngle * M_PI / 180.0;
+				double sn = sin(aop);
+				double cs = cos(aop);
 
+				A.id = id;
+				A.x = cs * cR;
+				A.y = sn * cR;
+
+				cAngle *= kn;
+				nAngle += cAngle;
+			}
 			vertexes.push_back(A);
 		}
+
+		cR += yStep;
+		yStep *= km;
 	}
 	nPoints = vertexes.size();
 }
@@ -54,20 +80,38 @@ void MESH::convertRectangleToTriangle() {
 		tmp.vertex[1] = rctglGrig[i].vertex[1];
 		tmp.vertex[2] = rctglGrig[i].vertex[2];
 		trglGrid[j]=tmp;
-		tmp.vertex[0] = rctglGrig[i].vertex[2];
-		tmp.vertex[1] = rctglGrig[i].vertex[3];
-		tmp.vertex[2] = rctglGrig[i].vertex[1];
+		tmp.vertex[0] = rctglGrig[i].vertex[1];
+		tmp.vertex[1] = rctglGrig[i].vertex[2];
+		tmp.vertex[2] = rctglGrig[i].vertex[3];
 		trglGrid[j+1]=tmp;
 	}
 }
 
 void MESH::output() {
 	convertRectangleToTriangle();
+
 	writeMaterialInfo();
 	writeElemInfo();
 	writeCooordInfo();
 	writeKuzlovInfo();
 }
+//void MESH::writeElemInfo() {
+//
+//	size_t t;
+//	int *tmp = new int[nElems * 14];
+//	for (int i = 0, k = 0; k < nElems; k++, i = i + 14) {
+//		for (int j = 0; j < 3; j++)
+//			tmp[i + j] = trglGrid[k].vertex[j];
+//		for (int j = 3, l = 0; j < 6; j++, l++)
+//			tmp[i + j] = trglGrid[k].vertex[l] + nPoints;
+//	}
+//
+//	//прежде следует вычленить информацию
+//	FILE *fout;
+//	fopen_s(&fout, "nver.dat", "wb");
+//	t = fwrite(tmp, sizeof(int), nElems * 14, fout);
+//	fclose(fout);
+//}
 void MESH::writeElemInfo() {
 
 	//vector<int> tmp; tmp.resize(n_el*14);
@@ -76,8 +120,8 @@ void MESH::writeElemInfo() {
 	for (int i = 0, k = 0; k < nElems/2; k++, i = i + 14) {
 		for (int j = 0; j < 4; j++)
 			tmp[i + j] = rctglGrig[k].vertex[j];
-		for (int j = 4; j < 8; j++)
-			tmp[i + j] = rctglGrig[k].vertex[j] + nElems;
+		for (int j = 4,l=0; j < 8; j++,l++)
+			tmp[i + j] = rctglGrig[k].vertex[l] + nPoints;
 	}
 
 	//прежде следует вычленить информацию
@@ -88,15 +132,26 @@ void MESH::writeElemInfo() {
 }
 void MESH::writeMaterialInfo() {
 
-	int *tmp = new int[nElems/2];
+	int *tmp = new int[nElems];
 	size_t t;
-	for (int i = 0; i < nElems/2; i++)	tmp[i] = 1;
+	for (int i = 0; i < nElems; i++)	tmp[i] = 1;
 	FILE *fout;
 	fopen_s(&fout, "nvkat.dat", "wb");
-	t = fwrite(tmp, sizeof(int), nElems/2, fout);
+	t = fwrite(tmp, sizeof(int), nElems, fout);
 	fclose(fout);
 
 }
+//void MESH::writeMaterialInfo() {
+//
+//	int *tmp = new int[nElems/2];
+//	size_t t;
+//	for (int i = 0; i < nElems/2; i++)	tmp[i] = 1;
+//	FILE *fout;
+//	fopen_s(&fout, "nvkat.dat", "wb");
+//	t = fwrite(tmp, sizeof(int), nElems/2, fout);
+//	fclose(fout);
+//
+//}
 void MESH::writeCooordInfo() {
 
 	double *tmp = new double[6 * nPoints];
@@ -110,7 +165,7 @@ void MESH::writeCooordInfo() {
 	for ( k = 0; k < nPoints; k++, i = i + 3) {
 		tmp[i] = vertexes[k].x;
 		tmp[i + 1] = vertexes[k].y;
-		tmp[i + 2] = 1;
+		tmp[i + 2] = 0.1;
 	}
 	FILE *fout;
 	fopen_s(&fout, "xyz.dat", "wb");
@@ -121,7 +176,14 @@ void MESH::writeCooordInfo() {
 void MESH::writeKuzlovInfo() {
 
 	FILE *b = fopen("inftry.dat", "w");
-	fprintf(b, " ISLAU=       0 INDKU1=       0 INDFPO=       0\nKUZLOV=%8d   KPAR=%8d    KT1=       0   KTR2=       0   KTR3=       0\nKISRS1=       0 KISRS2=       0 KISRS3=       0   KBRS=       0\n   KT7=       0   KT10=       0   KTR4=       0  KTSIM=       0\n   KT6=       0\n",2*nPoints, nElems/2);
+	fprintf(b, " ISLAU=       0 INDKU1=       0 INDFPO=       0\nKUZLOV=%8d   KPAR=%8d    KT1=       0   KTR2=       0   KTR3=       0\nKISRS1=       0 KISRS2=       0 KISRS3=       0   KBRS=       0\n   KT7=       0   KT10=       0   KTR4=       0  KTSIM=       0\n   KT6=       0\n", 2 * nPoints, nElems/2);
 	fclose(b);
 
 }
+//void MESH::writeKuzlovInfo() {
+//
+//	FILE *b = fopen("inftry.dat", "w");
+//	fprintf(b, " ISLAU=       0 INDKU1=       0 INDFPO=       0\nKUZLOV=%8d   KPAR=%8d    KT1=       0   KTR2=       0   KTR3=       0\nKISRS1=       0 KISRS2=       0 KISRS3=       0   KBRS=       0\n   KT7=       0   KT10=       0   KTR4=       0  KTSIM=       0\n   KT6=       0\n",2*nPoints, nElems/2);
+//	fclose(b);
+//
+//}
