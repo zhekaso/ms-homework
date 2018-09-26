@@ -16,14 +16,33 @@ struct Triangle {
 	int vertex[3];
 };
 
+struct Edge {
+	int edge_id;
+	Point A, B;
+};
+
 class MESH {
 public:
+	// Считывание исходной сетки
 	void input();
+	
+	vector<int> returnTheBasicFuncOfFE(int fe_id);	//По номеру КЭ возвращает номера входящих в него базсиных ф-ций
+	
+	vector<int> returnNumberFEIncludingEdge(int edge_id);	//По номеру ребра возвращает номера КЭ, в которые входит данное ребро
+	
+	bool returnTheNumberOfEdge(int a_id,int b_id,int *edge_id);	//По двум номерам вершин возвращается номер ребра
+	
+	bool returnPointsFormingAnEdge(int *a_id, int *b_id, int edge_id);	//По двум номерам вершин возвращается номер ребра
 protected:
 	int nPoints, nElems; //кол-во вершин и элементов
 	
 	vector <Point> vertexes;
 	vector <Triangle> trglGrid;
+	vector <Edge> edges;
+
+	void buildAListOfEdges();
+	Point returnPointFromId(int id);
+	bool findEdgeInEdges(Edge A);
 
 
 };
