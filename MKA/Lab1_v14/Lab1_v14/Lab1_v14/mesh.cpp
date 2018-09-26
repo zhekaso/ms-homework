@@ -94,6 +94,17 @@ void MESH::output() {
 	writeElemInfo();
 	writeCooordInfo();
 	writeKuzlovInfo();
+	writeTXT();
+}
+void MESH::writeTXT() {
+	FILE *fout = fopen("elems.txt", "w");
+	for (int i = 0; i < nElems; i++)
+		fprintf(fout, "%d %d %d\n", trglGrid[i].vertex[0], trglGrid[i].vertex[1], trglGrid[i].vertex[2]);
+	fclose(fout);
+	FILE *pntsinfo = fopen("coordinates.txt", "w");
+	for (int i = 0; i < nPoints ; i++)
+		fprintf(fout, "%d %lf %lf\n", vertexes[i].id, vertexes[i].x, vertexes[i].y);
+
 }
 //void MESH::writeElemInfo() {
 //

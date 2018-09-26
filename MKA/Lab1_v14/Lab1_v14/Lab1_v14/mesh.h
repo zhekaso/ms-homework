@@ -44,5 +44,6 @@ protected:
 	void writeCooordInfo();
 	void writeMaterialInfo();
 	void writeElemInfo();
+	void writeTXT();
 
 };
