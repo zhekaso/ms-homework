@@ -21,6 +21,11 @@ struct Edge {
 	Point A, B;
 };
 
+struct BasicFunc {
+	int id;
+	Point OfMax;
+};
+
 class MESH {
 public:
 	// —читывание исходной сетки
@@ -39,10 +44,15 @@ protected:
 	vector <Point> vertexes;
 	vector <Triangle> trglGrid;
 	vector <Edge> edges;
+	vector <BasicFunc> basic_functions;
 
 	void buildAListOfEdges();
+	void numerateBasicFunc();
+	Point findPoint(Point A, Point B);
+
 	Point returnPointFromId(int id);
 	bool findEdgeInEdges(Edge A);
+
 
 
 };
